@@ -1,11 +1,182 @@
 package CPANPLUS::Shell::Tk;
 
+#-------------------------------------------------------------------------------
+
+=head1 NAME
+
+CPANPLUS::Shell::Tk - Frontend for CPANPLUS using Tk
+
+=head1 SYNOPSIS
+
+To use CPANPLUS with the Tk GUI do:
+
+perl -MCPANPLUS -e 'shell(Tk)'
+
+=head1 WARNING
+
+This is very early beta!
+
+It may not do what you want it to do and it may break your CPANPLUS
+configuration.
+
+Use it accordingly!
+
+=head1 GUI
+
+The GUI is divided into three parts:
+
+=over 2
+
+=item Infowindow on top
+
+The Infowindow shows the current Perl version.
+It may show other interesting info in future.
+
+=item Modulelist on the left
+
+In the left window there are three tabs that show a search dialog with result,
+a list of installed modules and a list of modules in need of an update.
+
+=item Workwindow
+
+The window on the right shows different things depending on what you are doing
+at the moment.
+
+It shows basic information on the module when you select one in the list to the
+left.
+
+It shows the POD for the module when you select this from the right-click 
+popup menu in the list.
+
+It shows the command history with editing facility when selected from the menu.
+
+And it show this POD when you select 'Help' from the Help menu.
+
+=back
+
+=head1 USAGE
+
+=head2 Searching
+
+You can search for a module or for an author.
+Select which type of search you want to do in the dropdown listbox.
+
+Your search is always case sensitive but you can use perl regexen
+as search value.
+
+=head2 Working with Modules
+
+When you click on the modules in the listbox on the left you get basic
+information on the selected module.
+
+When you right click on the module you get a popup menu which lets you do
+the following:
+
+=over 2
+
+=item Install
+
+Install the newest version of this module from CPAN.
+
+=item Uninstall
+
+Remove the module from your disk.
+
+=item Fetch
+
+Fetch the module from CPAN but do nothing else.
+
+=item Extract
+
+Fetch the module if necessary and extract it in your .cpanplus directory.
+
+=item Make
+
+Fetch the module if necessary, extract and build it in your .cpanplus
+directory.
+
+=item Pod
+
+Display the POD of the module if it is installed.
+
+=back
+
+=head2 Changing the Configuration
+
+Via the Config menu you can change the configuration of CPANPLUS.
+
+=over 2
+
+=item CPANPLUS
+
+Change CPANPLUS config like default shell, debug level and so on.
+
+=item Package sources
+
+Edit the list of package sources.
+
+=back
+
+=head2 Perl
+
+You can view the entire Perl configuration using 'show full config'.
+
+You can restart CPANPLUS::Shell::Tk with another Perl version installed
+on your disk.
+
+Currently this only works for *NIX like environments and even here it might
+not pick the right perl binaries.
+
+=head2 History
+
+Every command you execute on a module will be logged in a history.
+
+You can edit and save that history to a file.
+
+That file can be used to perform automatic installation with
+CPANPLUS::Shell::Batch (not yet released :-).
+
+=head1 AUTHOR
+
+Bernd Dulfer <bdulfer@widd.de>
+
+=head1 COPYRIGHT
+
+(C) Bernd Dulfer
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 TODO
+
+In no particular order.
+
+=over 2
+
+=item More documentation!
+
+=item Cleanup the dialogs.
+
+=item Configure LWP.
+
+=item Configuration of this module (windowsize and position, ...).
+
+=item Restart with new perl platform independent.
+
+=item Move up/down entries in package sources
+
+=back
+
+=cut
+
+#-------------------------------------------------------------------------------
+
 use strict;
 
 BEGIN {
   use vars        qw( @ISA $VERSION );
   @ISA        =   qw( CPANPLUS::Shell::_Base);
-  $VERSION    =   '0.01';
+  $VERSION    =   '0.02';
 }
 
 #---- perl 5.005_03 does not support warnings, so we mock things up here
@@ -190,6 +361,7 @@ sub _setup_menu {
 
   my $helpmenu = $menubar->Menubutton(qw/-tearoff 0 -text Help -underline 0 -menuitems/ =>
     [
+      [Button => 'Help', -command => [\&_help, $self]],
       [Button => 'About', -command => [\&_about, $self]],
     ])->pack(-side => 'right');
 }
@@ -627,6 +799,7 @@ sub _create_button3_menu {
                               -command => sub {
                                             $self->{$_}->packForget foreach qw(HISTORY POD INFO);
                                             $self->{POD}->configure(-file => $self->{MODS}->[0]);
+                                            print $self->{MODS}->[0], "\n";
                                             $self->{POD}->pack(-fill => 'both', -expand => 1);
                                           }],
                             ],
@@ -966,8 +1139,7 @@ sub _perl_restart {
 sub _show_history {
   my $self = shift;
 
-  $self->{INFO}->packForget;
-  $self->{HISTORY}->packForget;
+  $self->{$_}->packForget foreach qw(HISTORY POD INFO);
   $self->{HISTORY}->pack(-fill => 'both', -expand => 1);
 }
 
@@ -1041,8 +1213,9 @@ sub _get_input {
   $inputdlg->waitWindow();
 }
 
+
 #------------------------------------------------------------------------
-# get input from user when installation process asks (not used by now)
+# show about dialog
 #
 sub _about {
   my $self = shift;
@@ -1060,6 +1233,20 @@ sub _about {
   $dialog = undef;
 }
 
+
+#------------------------------------------------------------------------
+# show pod as online help
+#
+sub _help {
+  my $self = shift;
+
+  $self->{$_}->packForget foreach qw(HISTORY POD INFO);
+  $self->{POD}->configure(-file => 'CPANPLUS::Shell::Tk');
+  $self->{POD}->pack(-fill => 'both', -expand => 1);
+}
+
+
 #------------------------------------------------------------------------
 
 1;
+

@@ -1,7 +1,11 @@
-CPANPLUS/Shell/Tk version 0.01
+CPANPLUS/Shell/Tk version 0.02
 ==============================
 
 CPANPLUS::Shell::Tk is a graphical user interface for CPANPLUS using Tk.
+
+To use CPANPLUS with the Tk GUI do:
+
+perl -MCPANPLUS -e 'shell(Tk)'
 
 INSTALLATION
 
